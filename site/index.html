@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#f3eee2">
+  <title>The AI Radar</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='3' fill='%2317140f'/%3E%3Ctext x='16' y='24' font-family='Georgia,serif' font-size='23' font-weight='700' text-anchor='middle' fill='%23f3eee2'%3ER%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;0,800;0,900;1,500;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="desk">
+    <main class="book" id="book" aria-live="polite"></main>
+  </div>
+
+  <nav class="turnbar" aria-label="Pages">
+    <button class="bar-btn" id="prev-page" aria-label="Previous page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="page-tabs" id="page-tabs"></div>
+    <button class="bar-btn" id="next-page" aria-label="Next page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    <span class="bar-sep" aria-hidden="true"></span>
+    <button class="bar-btn" id="open-search" aria-label="Search stories"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+    <button class="bar-btn" id="theme-toggle" aria-label="Switch between day and night edition"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </nav>
+
+  <aside class="search-sheet" id="search-sheet" aria-label="Search" hidden>
+    <div class="search-inner">
+      <div class="search-row">
+        <input id="search" type="search" placeholder="Search the archive" autocomplete="off" aria-label="Search stories, terms, sources">
+        <button class="plain-btn" id="close-search">Close</button>
+      </div>
+      <p class="search-count" id="search-count"></p>
+      <div class="briefs" id="search-results"></div>
+    </div>
+  </aside>
+
+  <aside class="reader" id="reader" aria-label="Article reader" hidden>
+    <div class="reader-bar">
+      <button class="bar-btn" id="reader-back" aria-label="Back to the paper"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <span class="reader-source" id="reader-source"></span>
+      <button class="plain-btn" id="reader-ask">Ask companion</button>
+      <a class="plain-btn" id="reader-original" target="_blank" rel="noopener noreferrer">Original ↗</a>
+    </div>
+    <div class="reader-scroll" id="reader-scroll">
+      <article class="reader-body" id="reader-body"></article>
+    </div>
+  </aside>
+  <div class="badge-pop" id="badge-pop" role="tooltip" hidden></div>
+
+  <script src="config.js"></script>
+  <script src="paper.js"></script>
+  <script src="app.js"></script>
+  <script src="companion.js"></script>
+</body>
+</html>

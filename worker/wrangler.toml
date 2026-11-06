@@ -1,0 +1,29 @@
+name = "ai-radar-companion"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+# Create with: npx wrangler kv namespace create RADAR_KV   (then paste the id below)
+[[kv_namespaces]]
+binding = "RADAR_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[vars]
+# Comma-separated origins allowed to use the companion (your Pages URL; localhost is for local testing).
+ALLOWED_ORIGINS = "https://ai-radar.pages.dev,http://localhost:8765"
+# The deployed site; /read only fetches URLs listed in its data/items.json (plus arXiv).
+SITE_URL = "https://ai-radar.pages.dev"
+# When a site blocks the reader, look the article up in its full-text RSS feed instead.
+FULLTEXT_FEEDS = '{"arstechnica.com": "https://arstechnica.com/ai/feed/"}'
+GROQ_MODEL = "qwen/qwen3.8-27b"
+# Extra request fields for that model. Reasoning stays hidden so answers stream cleanly.
+GROQ_EXTRA = '{"reasoning_format": "hidden"}'
+GEMINI_MODEL = "gemini-3.6-flash"
+# Context under this many characters goes to Groq; longer goes to Gemini (long context).
+GROQ_CONTEXT_CHARS = "20000"
+GEMINI_CONTEXT_CHARS = "400000"
+DAILY_CHAT_LIMIT = "300"
+FETCH_TIMEOUT_MS = "12000"
+
+# Secrets (never in this file):
+#   npx wrangler secret put GROQ_API_KEY
+#   npx wrangler secret put GEMINI_API_KEY

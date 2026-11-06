@@ -1,0 +1,313 @@
+# AI Radar scraper config. Everything tunable lives here.
+
+http:
+  timeout_seconds: 20
+  user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36 AI-Radar/1.0"
+  max_workers: 12
+
+limits:
+  feed_days: 21            # rolling window kept in items.json
+  prune_after_hours: 48    # after this, stories below prune_min_significance are dropped
+  prune_min_significance: 4
+  max_items: 1500          # hard cap so items.json stays light on a phone
+  max_item_age_days: 4     # ignore fetched items older than this (stops first-run floods)
+  seen_ttl_days: 30        # how long a URL stays in state.json's "seen" set
+  cluster_window_hours: 48 # title-similarity clustering window
+  title_similarity: 85     # rapidfuzz token_set_ratio threshold
+  min_title_tokens: 4      # shorter titles only cluster by URL (token_set_ratio is too generous on tiny titles)
+  raw_summary_chars: 500
+
+resolve:
+  max_per_run: 200         # Google News links resolved / summaries fetched per run; the rest wait for the next
+  workers: 4
+
+images:
+  max_per_run: 150         # stories looked up per run, most important first; no API cost, just page fetches
+  workers: 6
+
+llm:
+  # Models starting with "gemini" use GEMINI_API_KEY; others use GROQ_API_KEY through base_url.
+  # Free-tier Gemini quotas are per model and per day: gemini-3.6-flash allows only 20 requests, so it is
+  # left for the companion's long papers. See https://aistudio.google.com/rate-limit for current numbers.
+  model: "gemini-3.1-flash-lite"
+  fallback_model: "qwen/qwen3.8-27b"       # used if the main model is rate limited or a batch fails
+  gemini_base_url: "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+  base_url: "https://api.groq.com/openai/v1/chat/completions"
+  # Sent with Groq requests for that model. Don't use reasoning_effort: low on gpt-oss: it wrecks the scoring.
+  model_params:
+    "qwen/qwen3.8-27b": {reasoning_format: hidden}
+    "openai/gpt-oss-120b": {reasoning_effort: medium, include_reasoning: false}
+  batch_size: 15
+  max_calls_per_run: 4
+  min_seconds_between_calls: 7
+  groq_min_seconds_between_calls: 32   # Groq allows 8k tokens/minute; a batch is ~4.3k
+  overload_waits: [15, 30, 60]   # seconds to wait after each Gemini 503 before giving up on a batch
+  temperature: 0.2
+  timeout_seconds: 60
+
+ranking:
+  # score = significance × credibility_weight × (1 + coverage_factor·log2(1 + independent_sources))
+  #         × hype_factor (if hype) × no_substance_factor (if not substance) × 0.5^(age_hours / half_life_hours)
+  coverage_factor: 0.3
+  hype_factor: 0.5
+  no_substance_factor: 0.4
+  half_life_hours: 36
+  top:                      # "Top tier" section; everything else goes to "Everything else"
+    min_significance: 7
+    require_substance: true
+    exclude_hype: true
+    tier1_qualifies: true          # a tier-1 independent source is enough on its own
+    min_independent_sources: 1     # ...otherwise this many independent publishers
+  # Used when the LLM is unavailable. Deliberately below min_significance: nothing reaches the
+  # top tier on heuristics alone.
+  fallback_significance:
+    lab: 5
+    model: 5
+    paper: 5
+    release: 5
+    repo: 4
+    news: 4
+    community: 4
+
+credibility:
+  # Names must match source names as shown on cards (feed source names, or Google News publisher names).
+  tiers:
+    1:
+      weight: 1.0
+      sources: [Reuters, MIT Technology Review, Ars Technica, Hugging Face Papers, Hacker News]
+    2:
+      weight: 0.75
+      sources: [TechCrunch, The Verge, VentureBeat]
+    3:
+      weight: 0.45
+      sources: [r/LocalLLaMA, r/MachineLearning]
+  default_weight: 0.45          # anything not listed: unknown Google News outlets etc.
+  repo_stars_for_tier2: 1000    # new GitHub repos below this many stars are tier 3
+  # First-party = the company talking about itself. Feed sources with source_type lab/release/model are
+  # first-party automatically (override per source with first_party: true/false). These publisher names,
+  # which arrive via Google News, are first-party too.
+  first_party_weight: 0.7
+  first_party_publishers:
+    - NVIDIA Newsroom
+    - NVIDIA Blog
+    - OpenAI
+    - Anthropic
+    - Google
+    - Google Blog
+    - Microsoft
+    - Microsoft Source
+    - Meta
+    - Amazon
+    - About Amazon
+    - AWS
+    - IBM Newsroom
+    - Apple
+    - PR Newswire
+    - Business Wire
+    - GlobeNewswire
+    - Accesswire
+    - EIN Presswire
+  # Same-owner rule: an outlet covering its own company, parent, subsidiary or major investor counts as
+  # first-party. A source is same-owner when its outlet is listed and the story title names a listed company.
+  same_owner:
+    - outlets: [Ars Technica, WIRED, Wired, The New Yorker, Vanity Fair]
+      companies: [Condé Nast, Conde Nast, Advance Publications, Reddit]
+    - outlets: [TechCrunch, Engadget, Yahoo Finance, Yahoo News, Yahoo]
+      companies: [Yahoo, Apollo Global]
+    - outlets: [The Washington Post]
+      companies: [Amazon, AWS, Jeff Bezos, Blue Origin]
+    - outlets: [The Verge, Vox]
+      companies: [Vox Media]
+    - outlets: [Hacker News]
+      companies: [Y Combinator, YC]
+    - outlets: [MIT Technology Review, MIT News]
+      companies: [MIT]
+    - outlets: [Reuters]
+      companies: [Thomson Reuters]
+    - outlets: [Bloomberg, Bloomberg.com]
+      companies: [Bloomberg]
+    - outlets: [CNBC, NBC News, MSNBC]
+      companies: [Comcast, NBCUniversal]
+    - outlets: [Business Insider, Politico]
+      companies: [Axel Springer]
+    - outlets: [Moneycontrol, CNBC-TV18, News18, Firstpost]
+      companies: [Reliance, Jio, Network18]
+    - outlets: [The Times of India, The Economic Times, Economic Times]
+      companies: [Times Group, Bennett Coleman]
+    - outlets: [MSN]
+      companies: [Microsoft, OpenAI]
+    - outlets: [Fortune]
+      companies: [Fortune]
+
+# Authority decides which link becomes a cluster's primary (higher wins, then earliest).
+# Sources with prefilter: true must match an AI keyword in title/summary.
+sources:
+  # --- Research ---
+  - name: Hugging Face Papers
+    type: hf_papers
+    source_type: paper
+    authority: 3
+    min_upvotes: 15
+    days_back: 2           # today's list is sparse early on; also read yesterday's
+
+  # --- Models & labs ---
+  - name: Hugging Face Trending
+    type: hf_models
+    source_type: model
+    authority: 2
+    url: "https://huggingface.co/api/models?sort=trendingScore&limit=50"
+    top_n: 30
+    max_model_age_days: 14 # only flag recently created models entering the trending list
+
+  - {name: OpenAI, type: rss, source_type: lab, authority: 4, url: "https://openai.com/news/rss.xml"}
+  - {name: Google DeepMind, type: rss, source_type: lab, authority: 4, url: "https://deepmind.google/blog/rss.xml"}
+  - {name: Google AI, type: rss, source_type: lab, authority: 4, url: "https://blog.google/technology/ai/rss/"}
+  - {name: Hugging Face Blog, type: rss, source_type: lab, authority: 3, url: "https://huggingface.co/blog/feed.xml"}
+  - {name: Microsoft Research, type: rss, source_type: lab, authority: 3, url: "https://www.microsoft.com/en-us/research/feed/", prefilter: true}
+  # "Nvidia" is itself a keyword, so gaming/GeForce posts are excluded by title instead.
+  - {name: NVIDIA, type: rss, source_type: lab, authority: 3, url: "https://blogs.nvidia.com/feed/", prefilter: true,
+     exclude_title: "GeForce|Gaming|\\bGames?\\b|DLSS|RTX|Game Pass|Xbox|PlayStation"}
+  # ai.meta.com/blog blocks non-browser clients (HTTP 400); Meta's own RSS feeds are used instead.
+  - {name: Meta AI, type: rss, source_type: lab, authority: 4, url: "https://engineering.fb.com/category/ai-research/feed/"}
+  - {name: Meta, type: rss, source_type: lab, authority: 3, url: "https://about.fb.com/news/feed/", prefilter: true}
+
+  - name: Anthropic
+    type: html_links
+    source_type: lab
+    authority: 4
+    url: "https://www.anthropic.com/news"
+    link_pattern: "^/news/[a-z0-9-]+$"
+    # Category pages also live under /news/; pages without a publish date are skipped as well.
+    exclude_pattern: "^/news/(announcements|policy|product|societal-impacts|features|partnerships|research)$"
+  - {name: Mistral AI, type: rss, source_type: lab, authority: 4, url: "https://mistral.ai/news/rss"}
+  - name: Sarvam AI
+    type: html_links
+    source_type: lab
+    authority: 3
+    url: "https://www.sarvam.ai/blogs"
+    link_pattern: "^/blogs/[a-z0-9-]+$"
+  # ai4bharat.iitm.ac.in/blog is fully client-rendered (no links, RSS or sitemap), so track it via Google News.
+  - name: AI4Bharat
+    type: rss
+    source_type: news
+    authority: 1
+    google_news: true
+    url: "https://news.google.com/rss/search?q=%22AI4Bharat%22%20when:7d&hl=en-IN&gl=IN&ceid=IN:en"
+    require_keyword: "ai4bharat"
+
+  # --- Open-source tools ---
+  - name: GitHub
+    type: github_repos
+    source_type: repo
+    authority: 2
+    topics: [llm, machine-learning, ai-agents, generative-ai, deep-learning]
+    created_within_days: 7
+    min_stars: 150
+    per_topic: 15
+  - name: GitHub Releases
+    type: github_releases
+    source_type: release
+    authority: 3
+    max_age_days: 7
+    # Only major/minor (x.y.0) semver releases count. llama.cpp tags builds (b1234), so it only
+    # shows up if it ever publishes a semver tag.
+    repos:
+      - huggingface/transformers
+      - vllm-project/vllm
+      - ggml-org/llama.cpp
+      - ollama/ollama
+      - pytorch/pytorch
+      - langchain-ai/langchain
+      - huggingface/diffusers
+      - unslothai/unsloth
+
+  # --- News ---
+  - name: Google News
+    type: rss
+    source_type: news
+    authority: 1
+    google_news: true
+    prefilter: true
+    url: "https://news.google.com/rss/search?q=(%22artificial%20intelligence%22%20OR%20LLM%20OR%20%22AI%20model%22)%20when:1d&hl=en-IN&gl=IN&ceid=IN:en"
+  - name: Reuters
+    type: rss
+    source_type: news
+    authority: 3
+    google_news: true
+    prefilter: true
+    url: "https://news.google.com/rss/search?q=site:reuters.com%20AI%20when:1d&hl=en-IN&gl=IN&ceid=IN:en"
+  - {name: TechCrunch, type: rss, source_type: news, authority: 2, url: "https://techcrunch.com/category/artificial-intelligence/feed/", prefilter: true}
+  - {name: The Verge, type: rss, source_type: news, authority: 2, url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", prefilter: true}
+  - {name: Ars Technica, type: rss, source_type: news, authority: 2, url: "https://arstechnica.com/ai/feed/", prefilter: true}
+  - {name: MIT Technology Review, type: rss, source_type: news, authority: 2, url: "https://www.technologyreview.com/topic/artificial-intelligence/feed", prefilter: true}
+
+  # --- Community ---
+  - name: Hacker News
+    type: hackernews
+    source_type: community
+    authority: 1
+    prefilter: true
+    min_points: 100
+    hours: 24
+  - name: Reddit
+    type: reddit
+    source_type: community
+    authority: 0
+    prefilter: false        # these subs are AI-only already
+    optional: true          # Reddit blocks most cloud IPs; failures are expected and quiet
+    subreddits: [LocalLLaMA, MachineLearning]
+    min_score: 150
+
+# Word-boundary, case-insensitive matches against title + summary.
+keywords:
+  - artificial intelligence
+  - AI
+  - A.I.
+  - AGI
+  - LLM
+  - LLMs
+  - large language model
+  - language model
+  - machine learning
+  - deep learning
+  - neural network
+  - generative
+  - GenAI
+  - chatbot
+  - transformer
+  - diffusion model
+  - foundation model
+  - multimodal
+  - reasoning model
+  - inference
+  - fine-tuning
+  - RAG
+  - agentic
+  - AI agent
+  - AI agents
+  - GPU
+  - GPUs
+  - OpenAI
+  - ChatGPT
+  - GPT
+  - Anthropic
+  - Claude
+  - Gemini
+  - DeepMind
+  - Llama
+  - Mistral
+  - Hugging Face
+  - Nvidia
+  - Copilot
+  - Grok
+  - xAI
+  - DeepSeek
+  - Qwen
+  - Kimi
+  - Perplexity
+  - Sarvam
+  - AI4Bharat
+  - Stable Diffusion
+  - Midjourney
+  - robotics
+  - computer vision
