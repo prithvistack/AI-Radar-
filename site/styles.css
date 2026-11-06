@@ -1,4 +1,4 @@
-/* The AI Radar: a newspaper you turn page by page. Cream newsprint by day, black and marigold for the night edition. */
+/* The AI Radar: a newspaper you turn page by page. Cream newsprint by day, soft charcoal and amber for the night edition. */
 :root {
   color-scheme: light;
   --paper: #f3eee2; --paper-2: #e9e2d2; --ink: #17140f; --ink-2: #4a443a; --ink-3: #6e675a; --rule: #17140f;
@@ -19,12 +19,12 @@
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --paper: #0b0b0b; --paper-2: #1a1a1a; --ink: #f2f2ee; --ink-2: #b4b4af; --ink-3: #8a8a85; --rule: #8a8a85;
-  --hair: #ffffff26; --press: #ffc24b; --desk: #000000; --plate-dot: #5a5a56;
-  --surface: #141414; --border: #ffffff26; --accent-soft: #ffc24b1f; --on-accent: #0b0b0b;
-  --hype: #ffb199; --hype-soft: #3a2622;
-  --orb-a: #ffc24b; --orb-b: #ffe2a3; --orb-c: #1a1a1a;
-  --bar: #000000; --bar-ink: #f2f2ee; --bar-mark: #ffc24b; --selection: #ffc24b40;
+  --paper: #1e1e20; --paper-2: #2a2a2d; --ink: #e6e4de; --ink-2: #b2b0aa; --ink-3: #93918b; --rule: #76746f;
+  --hair: #ffffff1f; --press: #e8b95c; --desk: #161618; --plate-dot: #5f5e5a;
+  --surface: #242427; --border: #ffffff1f; --accent-soft: #e8b95c1f; --on-accent: #1e1e20;
+  --hype: #eeb09c; --hype-soft: #3d2d29;
+  --orb-a: #e8b95c; --orb-b: #f2d9a6; --orb-c: #2a2a2d;
+  --bar: #161618; --bar-ink: #e6e4de; --bar-mark: #e8b95c; --selection: #e8b95c40;
 }
 :root[data-theme="dark"] .cover img, :root[data-theme="dark"] .reader-content img { filter: brightness(.94); }
 * { box-sizing: border-box; }
