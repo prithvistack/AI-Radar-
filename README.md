@@ -20,7 +20,7 @@ worker/    Cloudflare Worker: /chat (streamed), /glossary (KV), /read (clean art
 2. **Free API keys.**
    - Groq: https://console.groq.com → API Keys
    - Gemini: https://aistudio.google.com → Get API key
-3. **Scraper secrets.** GitHub repo → Settings → Secrets and variables → Actions → add `GEMINI_API_KEY` (scoring) and `GROQ_API_KEY` (backup).
+3. **Scraper secrets.** GitHub repo → Settings → Secrets and variables → Actions → add `GEMINI` (scoring) and `GROQ` (backup).
    Then Actions → *Update feed* → **Run workflow** once. (`GITHUB_TOKEN` is built in.)
 4. **Cloudflare Pages** (free account): Workers & Pages → Create → Pages → *Connect to Git* → pick the repo.
    Framework preset: *None*, build command: *(empty)*, **build output directory: `site`**.
