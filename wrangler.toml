@@ -1,0 +1,4 @@
+# Tells Cloudflare Pages to publish only site/. The companion Worker has its own config in worker/.
+name = "ai-radar"
+pages_build_output_dir = "site"
+compatibility_date = "2025-09-01"

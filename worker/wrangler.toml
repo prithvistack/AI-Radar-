@@ -5,13 +5,13 @@ compatibility_date = "2025-09-01"
 # Create with: npx wrangler kv namespace create RADAR_KV   (then paste the id below)
 [[kv_namespaces]]
 binding = "RADAR_KV"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "795583ececf24e57ae7e49938815be56"
 
 [vars]
 # Comma-separated origins allowed to use the companion (your Pages URL; localhost is for local testing).
-ALLOWED_ORIGINS = "https://ai-radar.pages.dev,http://localhost:8765"
+ALLOWED_ORIGINS = "https://ai-radar-bbe.pages.dev,http://localhost:8765"
 # The deployed site; /read only fetches URLs listed in its data/items.json (plus arXiv).
-SITE_URL = "https://ai-radar.pages.dev"
+SITE_URL = "https://ai-radar-bbe.pages.dev"
 # When a site blocks the reader, look the article up in its full-text RSS feed instead.
 FULLTEXT_FEEDS = '{"arstechnica.com": "https://arstechnica.com/ai/feed/"}'
 GROQ_MODEL = "qwen/qwen3.8-27b"
